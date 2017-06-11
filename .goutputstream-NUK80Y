@@ -1,0 +1,40 @@
+#!/usr/bin/python2
+
+import os
+import commands
+import from __future__ import print_function
+
+os.system("tput setaf 1")
+print "\t\t\t\tWelcome to my Menu"
+os.system("tput setaf 7")
+print "\t\t\t\t------------------"
+
+print """
+Press 1 : To see cal
+Press 2	: To see date
+Press 3	: To create file
+Press 4	: To create user
+Press 5	: To exit
+"""
+choice = raw_input("Enter your choice: ")
+print choice
+
+if choice == "1": 	#or convert "choice" to integer, ie. int(choice)
+	print "Cal"
+elif int(choice) == 2:
+	print "Date"
+elif int(choice) == 3:
+        print "Create File"
+elif int(choice) == 4:
+        print "Create user"
+	user = raw_input("Enter your username: ")
+	ecode = commands.getstatusoutput(" sudo useradd " + user)
+	if ecode[0] == 0:
+		print ("user" , user, "created successfully")
+	else:
+		print ("user", user ,"creation unsuccessful")
+		print ("error: ",ecode)
+elif int(choice) == 5:
+        print "Exit"
+else:
+        print "Enter a valid option."
