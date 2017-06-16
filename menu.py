@@ -1,9 +1,12 @@
 #!/usr/bin/python2
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import os
 import commands
 import getpass
+import curses
+import staas
 
 class color:
    PURPLE = '\033[95m'
@@ -19,7 +22,6 @@ class color:
 
 
 def cont():
-	os.system("clear")
 	raw_input ("Press enter to continue...")
 	menu()
 	menu_choice()
@@ -28,17 +30,17 @@ def menu():
 		print (color.YELLOW + "\t\t\t\t\t- Welcome to -" + color.END )
 		os.system("tput setaf 1")
 		print ("""
-	\t8888888b.         888   888                        888b     d888                         
-	\t888   Y88b        888   888                        8888b   d8888                         
-	\t888    888        888   888                        88888b.d88888                         
-	\t888   d88P888  88888888888888b.  .d88b. 88888b.    888Y88888P888 .d88b. 88888b. 888  888 
-	\t8888888P" 888  888888   888 "88bd88""88b888 "88b   888 Y888P 888d8P  Y8b888 "88b888  888 
-	\t888       888  888888   888  888888  888888  888   888  Y8P  88888888888888  888888  888 
-	\t888       Y88b 888Y88b. 888  888Y88..88P888  888   888   "   888Y8b.    888  888Y88b 888 
-	\t888        "Y88888 "Y888888  888 "Y88P" 888  888   888       888 "Y8888 888  888 "Y88888 
-	\t             888                                                                       
-	\t        Y8b d88P                                                                       
-	\t         "Y88P"                                                                        
+\t8888888b.         888   888                        888b     d888                         
+\t888   Y88b        888   888                        8888b   d8888                         
+\t888    888        888   888                        88888b.d88888                         
+\t888   d88P888  88888888888888b.  .d88b. 88888b.    888Y88888P888 .d88b. 88888b. 888  888 
+\t8888888P" 888  888888   888 "88bd88""88b888 "88b   888 Y888P 888d8P  Y8b888 "88b888  888 
+\t888       888  888888   888  888888  888888  888   888  Y8P  88888888888888  888888  888 
+\t888       Y88b 888Y88b. 888  888Y88..88P888  888   888   "   888Y8b.    888  888Y88b 888 
+\t888        "Y88888 "Y888888  888 "Y88P" 888  888   888       888 "Y8888 888  888 "Y88888 
+\t             888                                                                       
+\t        Y8b d88P                                                                       
+\t         "Y88P"                                                                        
 		""")
 		os.system("tput setaf 7")
 		ws = " "
@@ -49,6 +51,7 @@ def menu():
 		Press 2: To see date
 		Press 3: To create file
 		Press 4: To create user
+		Press 5: To mount a drive
 		Press 0: To exit
 		""")
 def menu_choice():	
@@ -89,6 +92,11 @@ def menu_choice():
 			print("user \'", userName,"\' creation failed")
 			print("Error: \n", e_code[1])
 			
+	elif int(choice) == 5:
+		print ("\nMount a drive")
+		print ("---------------")
+		
+		cont()
 
 	elif int(choice) == 0:
 		print ("Closed")
