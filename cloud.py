@@ -27,6 +27,8 @@ class Server():
 		sshPass = getpass.getpass ("Input password: ")
 		global fssh 
 		fssh = "sshpass -p " + sshPass + " ssh -o StrictHostKeyChecking=no " + sshUser + "@" + sshIP
+		raw_input ("\nPress enter to continue...")
+		commands.getstatusoutput("clear")
 		optionsMenu()
 		menu_choice()
 
@@ -64,6 +66,31 @@ class Server():
 			print ("Error restarting server.")
 			print (restartHTTPD[1])
 
+def get_distro() :
+
+	if [ -f /etc/redhat-release ]:
+		OS="centos"
+		OS_VER=commands.getstatusoutput("cat /etc/redhat-release | sed 's/Linux\ //g' | cut -d" " -f3 | cut -d. -f1")
+
+	elif [ -f /etc/lsb-release ]:
+		commands.getstatusoutput(". /etc/lsb-release")
+		OS=DISTRIB_ID
+		OS_VER=DISTRIB_CODENAME
+
+	elif [ -f /etc/debian_version ]:
+		commands.getstatusoutput(". /etc/os-release")
+		OS="debian"  # XXX or Ubuntu??
+		OS_VER=VERSION_ID
+	
+
+	#export OS=OS
+	#export OS_VER=OS_VER
+	#export ARCH=ARCH
+	#export T_ARCH=T_ARCH
+	#export WK_ARCH=WK_ARCH
+	#echo Installing for OS OS_VER ARCH
+	#echo
+
 def cont():
 	raw_input ("Press enter to continue...")
 	mainMenu()
@@ -73,18 +100,14 @@ def mainMenu():
 		print (color.YELLOW + "\t\t\t\t\t-  -" + color.END )
 		os.system("tput setaf 4")
 		print ("""
-\t .d8888b. 888                     888    .d8888b.                  .d888d8b         
-\td88P  Y88b888                     888   d88P  Y88b                d88P" Y8P         
-\t888    888888                     888   888    888                888               
-\t888       888 .d88b. 888  888 .d88888   888        .d88b. 88888b. 888888888 .d88b.  
-\t888       888d88""88b888  888d88" 888   888       d88""88b888 "88b888   888d88P"88b 
-\t888    888888888  888888  888888  888   888    888888  888888  888888   888888  888 
-\tY88b  d88P888Y88..88PY88b 888Y88b 888   Y88b  d88PY88..88P888  888888   888Y88b 888 
-\t "Y8888P" 888 "Y88P"  "Y88888 "Y88888    "Y8888P"  "Y88P" 888  888888   888 "Y88888 
-\t                                                                                888 
-\t                                                                           Y8b d88P 
-\t                                                                            "Y88P"  
-                                                                      
+\t.d88888b                                                   a88888b.                   .8888b oo          
+\t88.    "'                                                 d8'   `88                   88   "             
+\t`Y88888b. .d8888b. 88d888b. dP   .dP .d8888b. 88d888b.    88        .d8888b. 88d888b. 88aaa  dP .d8888b. 
+\t      `8b 88ooood8 88'  `88 88   d8' 88ooood8 88'  `88    88        88'  `88 88'  `88 88     88 88'  `88 
+\td8'   .8P 88.  ... 88       88 .88'  88.  ... 88          Y8.   .88 88.  .88 88    88 88     88 88.  .88 
+\t Y88888P  `88888P' dP       8888P'   `88888P' dP           Y88888P' `88888P' dP    dP dP     dP `8888P88 
+\t                                                                                                     .88 
+\t                                                                                                 d8888P  
 		""")
 		os.system("tput setaf 7")
 		ws = " "
@@ -94,9 +117,6 @@ def mainMenu():
 		Log-in to remote server required:
 
 
-		""")
-		raw_input ("""
-Enter to continue...
 		""")
 		
 
@@ -109,7 +129,49 @@ def optionsMenu():
 		Press 4: To mount a drive
 		Press 0: To exit
 		""")
+def print_line():
+        print '-----------------------------'
 
+def check_httpd():
+        if 'httpd' in output:
+                print_line()
+                print 'Service HTTPD is running !'
+                print_line()
+        else:
+                print_line()
+                print 'Service HTTPD is not running, so starting it !'
+                print_line()
+                os.system('sudo systemctl start httpd')
+                print 'Checking status after starting service...'
+                os.system('sudo systemctl status httpd')
+
+def check_sshd():
+        if 'sshd' in output:
+                print_line()
+                print 'Service sshd is running !'
+                print_line()
+        else:
+                print_line()
+                print 'Service sshd is not running, so starting it !'
+                print_line()
+                os.system('sudo systemctl start sshd')
+                print 'Checking status after starting service...'
+                os.system('sudo systemctl status sshd')
+
+def services():
+        check_httpd()
+        check_sshd()
+
+def install_apache():
+    print("installing apache server")
+    os.system('sudo yum -y install httpd')
+
+
+    print("enabling apache server")
+    os.system('sudo systemctl enable httpd.service')
+
+    print("starting apache server")
+    os.system('sudo systemctl start httpd.service')
 
 def menu_choice():	
 	server = Server()
@@ -169,3 +231,33 @@ def init():
 	mainMenu()
 	Server().Slogin()
 init()
+
+
+
+@task
+def full_deploy():
+	execute(deploy_files)
+	execute(start_node)
+	execute(cleanup)
+
+@task
+def start_node():
+	sudo("systemctl restart nginx.service")
+	sudo("systemctl restart httpd.service")
+	sudo("systemctl enable /srv/node-test/node-test.service")
+	sudo("systemctl restart node-test.service")
+
+@task
+def deploy_files():
+	with cd("/tmp"):
+		run("rm -rf /tmp/node-test")
+		run('ls')
+		run("git clone " + repo)
+		run("ls node-test/src/")
+		sudo("cp node-test/src/node-test.{js,service} " + dest_directory)
+		sudo("cp node-test/src/node-test-nginx.conf /etc/nginx/conf.d/")
+		sudo("cp node-test/src/node-test-apache.conf /etc/httpd/conf.d/")
+
+@task
+def cleanup():
+	run("rm -rf /tmp/node-test")
