@@ -1,0 +1,52 @@
+
+- hosts : web
+
+  tasks:
+
+  - name: make a user
+    command: sudo useradd raja
+  
+  - name: set password
+    command: echo "redhat" | passwd raja --stdin
+
+  #- name: make a user
+  #  user:
+  #    name: raja
+  #    password: redhat
+
+  - name: make directory
+    file:
+      state: directory
+      path: /sshfs/raja-lv1
+
+  # change owner of shared folder
+  - name: changing owner to raja
+    command: sudo chown -R raja /sshfs/raja-lv1/
+   
+  - name: give all permissions to user raja
+    command: sudo chmod 700 /sshfs/raja-lv1
+
+  - name: creating lv from vg
+    lvol:
+      lv: raja-lv1
+      vg: vg1
+      size: 1
+
+  # formating the created lv
+  - name: Format LV
+    filesystem:
+      fstype: ext4
+      dev: /dev/vg1/raja-lv1
+
+  # mount the lv permanently
+  - name: permanent mount lv
+    mount:
+      path: /sshfs/raja-lv1
+      src: /dev/vg1/raja-lv1
+      fstype: ext4
+      state: mounted
+
+  # restart ssh
+  - service:
+      name: "sshd"
+      state: restarted 

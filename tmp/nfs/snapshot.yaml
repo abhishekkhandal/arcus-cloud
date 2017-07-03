@@ -1,0 +1,9 @@
+
+- hosts: web
+  tasks:
+  
+  - lvol:
+      vg: vg1
+      lv: 30
+      size: 60
+      snapshot: 03-Jul-2017-19-46-42 
